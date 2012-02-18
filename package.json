@@ -1,0 +1,10 @@
+{
+  "name": "ariel",
+  "version": "0.0.1",
+  "main": "ariel.js",
+  "author": "Matthias Goetzke <m.goetzke@curasystems.de> (https://twitter.com/mgoetzke)",
+  "bin": 
+    {
+      "ariel": "./cli.js"
+    }
+}
