@@ -11,7 +11,7 @@
   "main": "ariel.js",
   "scripts": {
     "start": "node cli.js",
-    "test": "tap test"
+    "test": "mocha"
   },
   "bin": "./cli.js",
   "engines": {
