@@ -1,0 +1,49 @@
+info it worked if it ends with ok
+verbose cli [ 'node',
+verbose cli   'C:\\Users\\Matthias\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js',
+verbose cli   'docs',
+verbose cli   'should' ]
+info using npm@1.1.1
+info using node@v0.6.11
+verbose config file C:\Users\Matthias\.npmrc
+verbose config file C:\Program Files (x86)\nodejs\etc\npmrc
+verbose config file C:\Users\Matthias\AppData\Roaming\npm\node_modules\npm\npmrc
+verbose mkdir done: C:\Users\Matthias\AppData\Roaming\npm 755
+verbose raw, before any munging should/latest
+verbose url resolving [ 'https://registry.npmjs.org/', './should/latest' ]
+verbose url resolved https://registry.npmjs.org/should/latest
+verbose etag "CTFPZYNZMI2C0W83PE5I6X6BC"
+http GET https://registry.npmjs.org/should/latest
+http 304 https://registry.npmjs.org/should/latest
+silly get cb [ 304,
+silly get cb   { server: 'CouchDB/1.1.0 (Erlang OTP/R14B04)',
+silly get cb     etag: '"CTFPZYNZMI2C0W83PE5I6X6BC"',
+silly get cb     date: 'Sun, 19 Feb 2012 15:56:31 GMT',
+silly get cb     'content-length': '0' } ]
+verbose etag should/latest from cache
+verbose mkdir done: C:\Users\Matthias\AppData\Roaming\npm-cache\should\latest 755
+silly exec start "http://search.npmjs.org/#/should"
+silly spawning [ 'start', [ 'http://search.npmjs.org/#/should' ], null ]
+ERR! Failed to open http://search.npmjs.org/#/should in a browser.  It could be that the
+ERR! 'browser' config is not set.  Try doing this:
+ERR!     npm config set browser google-chrome
+ERR! or:
+ERR!     npm config set browser lynx
+ERR! 
+ERR! Error: `start "http://search.npmjs.org/#/should"` failed with 127
+ERR!     at ChildProcess.<anonymous> (C:\Users\Matthias\AppData\Roaming\npm\node_modules\npm\lib\utils\exec.js:49:20)
+ERR!     at ChildProcess.emit (events.js:70:17)
+ERR!     at maybeExit (child_process.js:361:16)
+ERR!     at Process.onexit (child_process.js:397:5)
+ERR! You may report this log at:
+ERR!     <http://github.com/isaacs/npm/issues>
+ERR! or email it to:
+ERR!     <npm-@googlegroups.com>
+ERR! 
+ERR! System Windows_NT 6.1.7601
+ERR! command "node" "C:\\Users\\Matthias\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js" "docs" "should"
+ERR! cwd c:\Development\apps\node-ariel
+ERR! node -v v0.6.11
+ERR! npm -v 1.1.1
+ERR! message `start "http://search.npmjs.org/#/should"` failed with 127
+verbose exit [ 1, true ]
