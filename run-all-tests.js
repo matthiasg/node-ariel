@@ -1,1 +1,3 @@
-console.log('running tests')
+ariel = require('./ariel');
+
+ariel.testFolder('test');

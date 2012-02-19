@@ -1,1 +1,2 @@
-console.log 'test2'
+module.exports.testFolder = (path)->
+	console.log "testing folder #{path}"
