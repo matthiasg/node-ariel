@@ -8,17 +8,18 @@
     "type": "git",
     "url": "git@github.com:matthiasg/node-ariel.git"
   },
-  "main": "ariel.js",
+  "main": "./ariel",
   "scripts": {
-    "start": "cli.js",
-    "test": "test.js"
+    "start": "node ./cli",
+    "test": "node ./test"
   },
-  "bin": "./cli.js",
+  "bin": "node ./cli",
   "engines": {
-    "node": "~0.6.10"
+    "node": "*"
   },
   "dependencies": {
-      "coffee-script": ">=1.2.0"
+      "coffee-script": ">= 1.2.0",
+      "optimist": ">= 0.3.1"
     },
   "devDependencies": {},
   "optionalDependencies": {}
