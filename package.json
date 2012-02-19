@@ -8,10 +8,10 @@
     "type": "git",
     "url": "git@github.com:matthiasg/node-ariel.git"
   },
-  "main": "./ariel.js",
+  "main": "ariel.js",
   "scripts": {
-    "start": "node ./cli.js",
-    "test": "tap ./tests"
+    "start": "node cli.js",
+    "test": "tap tests"
   },
   "bin": "./cli.js",
   "engines": {
