@@ -1,4 +1,4 @@
 --require should 
---reporter dot
+--reporter tap
 --ui bdd
 --growl

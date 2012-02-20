@@ -5,6 +5,7 @@ child = require 'child_process'
 util = require 'util'
 require 'colors'
 CoffeeScript = require 'coffee-script'
+tty = require 'tty'
 
 module.exports.options = options =
   excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*']
@@ -182,19 +183,24 @@ runMocha = (cbFinished)->
 
     opt = 
       cwd: process.cwd()
+      setsid:true
+      #customFds: [1,2,3]    
       
-    #customFds: [process.stdin,process.stdout,process.stderr]    
-    #setsid:true
 
-    console.log "CWD:" + opt.cwd    
-    
-    console.log  process.argv[0]
-    
+    #process.stdin.pause()
+    #tty.setRawMode(true);
+
     proc = child.spawn process.argv[0], ["./node_modules/mocha/bin/_mocha"], opt
-    proc.stdout.on 'data', (data)->console.log data.toString()
-    proc.stderr.on 'data', (data)->console.log data.toString()
+    proc.stdout.pipe process.stdout
+    proc.stderr.pipe process.stdout
+
+    #proc.stdout.on 'data', (data)->process.stdout.write(data)
+    #proc.stderr.on 'data', (data)->process.stderr.write(data)
+
     proc.on 'exit', ->
+      console.log()
       console.log "Testing completed.".green
+      #tty.setRawMode(false);
       cbFinished()
     
   catch error

@@ -7,11 +7,11 @@ var ariel = require('./lib/ariel');
 
 module.exports.run = function() {
   
+  process.stdin.resume();
   console.log("RUNNING:");
-
+  
   ariel.watchDir( argv.dir );
 
-  process.stdin.resume();
   require('tty').setRawMode(true);
 
   process.stdin.on('keypress', function(letter,key){
