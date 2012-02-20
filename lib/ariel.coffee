@@ -1,12 +1,12 @@
 fs = require 'fs'
 path = require 'path'
 file = require 'file'
+child = require 'child_process'
 CoffeeScript = require 'coffee-script'
-
-
 
 module.exports.options = options = excludeDirs: ['.git.*', 'bin.*','test.*','node_modules.*'] 
 
+rootDir = ""
 
 module.exports.test = () -> true
 module.exports.watchDir = (dirPath) ->
@@ -15,13 +15,46 @@ module.exports.watchDir = (dirPath) ->
     console.log "Cannot watch '#{dirPath}'. Directory does not exist."
     return
 
+  rootDir = dirPath   
+
   console.log "watching dir: #{dirPath}"
+  compileFilesInDir dirPath, options.excludeDirs, (filePath) ->  
+    cleanupFile filePath if isCompiledJavascriptFileForMatchingCoffeeScript filePath
+    watchFile filePath 
 
-  enumerateAllFiles dirPath, options.excludeDirs, (dirPath, file ) ->
-    
-    compileToJavascript file if isCoffeeScriptFile file 
-    return if isCompiledJavascriptFileForMatchingCoffeeScript
+  watchDir dirPath
 
+cleanupFile = (filePath) ->
+  process.on 'exit', -> fs.unlinkSync filePath
+
+compileFilesInDir = (dirPath, excludeDirs, cbCompiledFile) ->
+  
+  enumerateAllFiles dirPath, excludeDirs, (dirPath, filePath) ->
+    compileFile filePath   
+    cbCompiledFile(filePath) if cbCompiledFile
+  
+compileFile = (filePath) ->
+
+  compileToJavascript(filePath) if isCoffeeScriptFile filePath 
+
+  if isJavascriptFile filePath
+    return if isCompiledJavascriptFileForMatchingCoffeeScript filePath
+
+watchDir = (dirPath) ->
+  fs.watch dirPath, (event,filename) ->
+    console.log "detected change in #{dirPath}: #{event}@#{filename}"
+    compileFilesInDir dirPath, options.excludeDirs    
+
+watchFile = (filePath) ->
+  fs.watch filePath, (event,filename) ->
+    console.log "detected change in #{filePath}: #{event}@#{filename}"
+    compileFile filePath
+  console.log "watching #{filePath}"
+
+runMocha = ->
+  proc = child.spawn ['mocha'], customFds: [0,1,2]
+  #proc.on('exit', process.exit);
+  
 enumerateAllFiles = (rootDirPath, excludeDirs, callbackPerFile) ->
 
   file.walk rootDirPath, (unknown, dirPath, dirs, files) ->
@@ -41,17 +74,21 @@ isMatchedByAny = (str, matchers) ->
 
 compileToJavascript = (filePath) ->
 
-  javascriptFilePath = convertToJavascriptExtension filePath
+  javascriptFilePath = changeToJavascriptExtension filePath
 
   if path.existsSync javascriptFilePath
     return if isNewer javascriptFilePath, filePath
+    console.log "re-compiling #{filePath} -> #{javascriptFilePath}"
+  else
+    console.log "compiling #{filePath} -> #{javascriptFilePath}"
 
-  console.log "compiling #{filePath} -> #{javascriptFilePath}"
+  compileCoffeeScriptFileToJavascriptFile filePath, javascriptFilePath
 
-  code = fs.readFileSync(filePath).toString()
-  js = CoffeeScript.compile( code ) #, getCoffeeScriptOptions(filePath) )
+compileCoffeeScriptFileToJavascriptFile = (coffeePath, jsPath) ->
 
-  fs.writeFileSync javascriptFilePath, js
+  code = fs.readFileSync(coffeePath).toString()
+  compiledJs = CoffeeScript.compile code, getCoffeeScriptOptions(coffeePath)
+  fs.writeFileSync jsPath, compiledJs
 
 isNewer = (a, b) ->
   aStats = fs.statSync a
@@ -61,16 +98,19 @@ isNewer = (a, b) ->
 
 getCoffeeScriptOptions = (filePath) ->
   filename: filePath,
-  source: filePath
   bare: no
 
 isCoffeeScriptFile = (filePath) -> path.extname(filePath) == '.coffee'
-isCompiledJavascriptFileForMatchingCoffeeScript = (filePath) -> return false
+isJavascriptFile = (filePath) -> path.extname(filePath) == '.js'
+isCompiledJavascriptFileForMatchingCoffeeScript = (filePath) -> path.existsSync changeToCoffeeScriptExtension filePath 
 
-convertToJavascriptExtension = (filePath) ->  
+changeToCoffeeScriptExtension = (filePath) ->  changeExtension(filePath, '.js')
+changeToJavascriptExtension = (filePath) ->  changeExtension(filePath, '.js')
+
+changeExtension = (filePath, newExtension) ->  
   
   dirname = path.dirname(filePath)
   oldExtension = path.extname(filePath)
   nameWithoutExtension = path.basename(filePath, oldExtension )
 
-  path.join(  dirname, nameWithoutExtension  + ".js" )
+  path.join( dirname, nameWithoutExtension  + newExtension )
