@@ -8,8 +8,8 @@ CoffeeScript = require 'coffee-script'
 tty = require 'tty'
 
 module.exports.options = options =
-  excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*']
-  excludeCompileDirs: ['.git.*', 'bin.*','test.*','node_modules.*', 'temp.*'] 
+  excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*']
+  excludeCompileDirs: ['.git.*', 'bin.*','test.*','node_modules.*', 'temp.*', 'tools.*'] 
 
 rootDirPath = ""
 filesToCleanup = []
@@ -178,7 +178,7 @@ isIgnoredCompileFile = (filePath)->
 runMocha = (cbFinished)->
    
   return if not path.existsSync 'test'
-  
+
   console.log 'Testing...'.green
   
   try  
