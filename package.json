@@ -13,7 +13,7 @@
     "start": "node ./bin/ariel",
     "test": "node node_modules/mocha/bin/mocha"
   },
-  "bin": "./cli.js",
+  "bin": "./bin/ariel.js",
   "engines": {
     "node": ">= 0.6"
   },
@@ -21,7 +21,8 @@
       "coffee-script": "1.2.x",
       "optimist": "0.3.x",
       "colors": "0.6.x",
-      "file": ">= 0.2.0"
+      "file": ">= 0.2.0",
+      "mocha": ">= 0.12.1"   
     },
   "devDependencies": {
       "mocha": ">= 0.12.1",
@@ -30,5 +31,5 @@
       "runforcover": ">= 0.0.1"      
   },
   "optionalDependencies": {},
-  "bundleDependencies":["mocha", "wrench"]
+  "bundleDependencies":[]
 }

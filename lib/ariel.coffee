@@ -176,7 +176,9 @@ isIgnoredCompileFile = (filePath)->
   isMatchedByAny relativePath, options.excludeCompileDirs
 
 runMocha = (cbFinished)->
-    
+   
+  return if not path.existsSync 'test'
+  
   console.log 'Testing...'.green
   
   try  
@@ -189,8 +191,9 @@ runMocha = (cbFinished)->
 
     #process.stdin.pause()
     #tty.setRawMode(true);
+    mochaPath = path.join( __dirname, '../node_modules/mocha/bin/_mocha' );
 
-    proc = child.spawn process.argv[0], ["./node_modules/mocha/bin/_mocha"], opt
+    proc = child.spawn process.argv[0], [mochaPath], opt
     proc.stdout.pipe process.stdout
     proc.stderr.pipe process.stdout
 
