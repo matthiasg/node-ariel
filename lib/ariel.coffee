@@ -3,6 +3,7 @@ path = require 'path'
 file = require 'file'
 child = require 'child_process'
 util = require 'util'
+require 'colors'
 CoffeeScript = require 'coffee-script'
 
 module.exports.options = options = excludeDirs: ['.git.*', 'bin.*','test.*','node_modules.*'] 
@@ -10,6 +11,8 @@ module.exports.options = options = excludeDirs: ['.git.*', 'bin.*','test.*','nod
 rootDirPath = ""
 filesToCleanup = []
 watchedFiles = []
+compilationRequests = []
+testRequests = []
 
 module.exports.test = () -> true
 module.exports.watchDir = (dirPath) ->
@@ -22,6 +25,9 @@ module.exports.watchDir = (dirPath) ->
 
   console.log "watching dir: #{rootDirPath}"
   
+  waitForCompilationRequests()
+  waitForTestRequests()
+  
   watchRootFolder()
   processRootFolder()
 
@@ -29,6 +35,29 @@ module.exports.watchDir = (dirPath) ->
 
   runMocha()
   
+waitForCompilationRequests = ->
+  setInterval handleCompileRequests, 100
+
+handleCompileRequests = ->
+  
+  if compilationRequests.length > 0
+    console.log "Compiling...#{compilationRequests.length}".green
+  
+  requests = compilationRequests
+  compilationRequests = []
+
+  for f in requests
+    compileFile f
+
+waitForTestRequests = ->
+  setInterval handleTestRequests, 300
+
+handleTestRequests = ->
+  if testRequests.length > 0  
+    console.log "Testing...".green
+    runMocha()
+    testRequests = []
+
 watchRootFolder = ->
   watchDir rootDirPath, options.excludeDirs
 
@@ -71,16 +100,28 @@ cleanupFile = (filePath) ->
 compileAllFiles = (dirPath, excludeDirs) ->
   
   enumerateAllFiles dirPath, excludeDirs, (dirPath, filePath) ->   
-    compileFile filePath 
+    queueFileCompile filePath if isCoffeeScriptFile filePath
   
 compileFile = (filePath) ->
+    
+  if not isCoffeeScriptFile filePath
+    console.log "NOT COFFEE:#{filePath}".red
+
   compileToJavascript(filePath) if isCoffeeScriptFile filePath
+
+queueTest = ->
+  if testRequests.length == 0
+    testRequests.push 'test'
+
+queueFileCompile = (filePath) ->
+  if compilationRequests.indexOf(filePath) < 0
+    compilationRequests.push filePath
 
 watchDir = (dirPath, excludeDirs) ->
   fs.watch dirPath, (event,filename) ->
     console.log 'detected dir change'
     processAllFilesInFolder rootDirPath, excludeDirs    
-    runMocha()
+    queueTest()
   
 watchFile = (filePath) ->
   
@@ -88,12 +129,15 @@ watchFile = (filePath) ->
     
   watchedFiles.push filePath
 
+  #console.log "WATCH #{filePath}"
   fs.watch filePath, (event,filename) ->
-    if path.existsSync filePath
-      compileFile filePath
-    return if isCoffeeScriptFile
+    #console.log "CHANGE:#{event}:#{filePath}"
     
-    runMocha()
+    if path.existsSync filePath
+      queueFileCompile filePath if not isCompiledJavascriptFileForMatchingCoffeeScript(filePath)
+    return if isCoffeeScriptFile filePath
+    
+    queueTest()
   
 runMocha = ->
   console.log 'running tests...'
@@ -114,10 +158,18 @@ compileToJavascript = (filePath) ->
   compileCoffeeScriptFileToJavascriptFile filePath, javascriptFilePath
 
 compileCoffeeScriptFileToJavascriptFile = (coffeePath, jsPath) ->
+  
+  try
+    code = fs.readFileSync(coffeePath).toString()
+    compiledJs = CoffeeScript.compile code, getCoffeeScriptOptions(coffeePath)  
+    fs.writeFileSync jsPath, compiledJs
+  catch error
+    console.log "Error compiling #{coffeePath}:".red + error
+    fs.unlinkSync jsPath if path.existsSync jsPath
+    
 
-  code = fs.readFileSync(coffeePath).toString()
-  compiledJs = CoffeeScript.compile code, getCoffeeScriptOptions(coffeePath)
-  fs.writeFileSync jsPath, compiledJs
+  return
+  
 
 isNewer = (a, b) ->
   aStats = fs.statSync a
