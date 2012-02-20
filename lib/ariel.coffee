@@ -2,11 +2,14 @@ fs = require 'fs'
 path = require 'path'
 file = require 'file'
 child = require 'child_process'
+util = require 'util'
 CoffeeScript = require 'coffee-script'
 
 module.exports.options = options = excludeDirs: ['.git.*', 'bin.*','test.*','node_modules.*'] 
 
-rootDir = ""
+rootDirPath = ""
+filesToCleanup = []
+watchedFiles = []
 
 module.exports.test = () -> true
 module.exports.watchDir = (dirPath) ->
@@ -15,48 +18,33 @@ module.exports.watchDir = (dirPath) ->
     console.log "Cannot watch '#{dirPath}'. Directory does not exist."
     return
 
-  rootDir = dirPath   
+  rootDirPath = dirPath   
 
-  console.log "watching dir: #{dirPath}"
-  compileFilesInDir dirPath, options.excludeDirs, (filePath) ->  
-    cleanupFile filePath if isCompiledJavascriptFileForMatchingCoffeeScript filePath
-    watchFile filePath 
-
-  watchDir dirPath
-
-cleanupFile = (filePath) ->
-  process.on 'exit', -> fs.unlinkSync filePath
-
-compileFilesInDir = (dirPath, excludeDirs, cbCompiledFile) ->
+  console.log "watching dir: #{rootDirPath}"
   
-  enumerateAllFiles dirPath, excludeDirs, (dirPath, filePath) ->
-    compileFile filePath   
-    cbCompiledFile(filePath) if cbCompiledFile
+  watchRootFolder()
+  processRootFolder()
+
+  cleanAllCompiledFilesOnProcessExit()
+
+  runMocha()
   
-compileFile = (filePath) ->
+watchRootFolder = ->
+  watchDir rootDirPath, options.excludeDirs
 
-  compileToJavascript(filePath) if isCoffeeScriptFile filePath 
+processRootFolder = ->
+  processAllFilesInFolder rootDirPath, options.excludeDirs
 
-  if isJavascriptFile filePath
-    return if isCompiledJavascriptFileForMatchingCoffeeScript filePath
+cleanAllCompiledFilesOnProcessExit = ->
+  process.on 'exit', ->
+    console.log "Cleaning #{filesToCleanup.length} compiled files."
+    fs.unlinkSync filePath for filePath in filesToCleanup
 
-watchDir = (dirPath) ->
-  fs.watch dirPath, (event,filename) ->
-    console.log "detected change in #{dirPath}: #{event}@#{filename}"
-    compileFilesInDir dirPath, options.excludeDirs    
-
-watchFile = (filePath) ->
-  fs.watch filePath, (event,filename) ->
-    console.log "detected change in #{filePath}: #{event}@#{filename}"
-    compileFile filePath
-  console.log "watching #{filePath}"
-
-runMocha = ->
-  proc = child.spawn ['mocha'], customFds: [0,1,2]
-  #proc.on('exit', process.exit);
+processAllFilesInFolder = (dirPath, excludeDirs) ->
+  enumerateAllFiles dirPath, options.excludeDirs, (dirPath, filePath) -> handleDetectedFile filePath     
+  compileAllFiles dirPath, options.excludeDirs
   
 enumerateAllFiles = (rootDirPath, excludeDirs, callbackPerFile) ->
-
   file.walk rootDirPath, (unknown, dirPath, dirs, files) ->
 
     dirName = path.relative rootDirPath, dirPath
@@ -68,10 +56,51 @@ isMatchedByAny = (str, matchers) ->
 
   for m in matchers   
     return true if str.match m
-    
-  console.log "not skipping #{str}"      
   return false
 
+handleDetectedFile = (filePath) ->
+  #console.log "detected #{filePath}"
+  cleanupFile filePath if isCompiledJavascriptFileForMatchingCoffeeScript(filePath)
+  watchFile filePath 
+
+cleanupFile = (filePath) ->
+  if filesToCleanup.indexOf(filePath) < 0
+    #console.log "will cleanup #{filePath} later"
+    filesToCleanup.push filePath 
+  
+compileAllFiles = (dirPath, excludeDirs) ->
+  
+  enumerateAllFiles dirPath, excludeDirs, (dirPath, filePath) ->   
+    compileFile filePath 
+  
+compileFile = (filePath) ->
+  compileToJavascript(filePath) if isCoffeeScriptFile filePath
+
+watchDir = (dirPath, excludeDirs) ->
+  fs.watch dirPath, (event,filename) ->
+    console.log 'detected dir change'
+    processAllFilesInFolder rootDirPath, excludeDirs    
+    runMocha()
+  
+watchFile = (filePath) ->
+  
+  return if watchedFiles.indexOf(filePath) >= 0
+    
+  watchedFiles.push filePath
+
+  fs.watch filePath, (event,filename) ->
+    if path.existsSync filePath
+      compileFile filePath
+    return if isCoffeeScriptFile
+    
+    runMocha()
+  
+runMocha = ->
+  console.log 'running tests...'
+
+  #proc = child.spawn ['mocha'], customFds: [0,1,2]
+  #proc.on('exit', process.exit);
+  
 compileToJavascript = (filePath) ->
 
   javascriptFilePath = changeToJavascriptExtension filePath
@@ -102,9 +131,13 @@ getCoffeeScriptOptions = (filePath) ->
 
 isCoffeeScriptFile = (filePath) -> path.extname(filePath) == '.coffee'
 isJavascriptFile = (filePath) -> path.extname(filePath) == '.js'
-isCompiledJavascriptFileForMatchingCoffeeScript = (filePath) -> path.existsSync changeToCoffeeScriptExtension filePath 
 
-changeToCoffeeScriptExtension = (filePath) ->  changeExtension(filePath, '.js')
+isCompiledJavascriptFileForMatchingCoffeeScript = (filePath) ->
+  
+  return isJavascriptFile(filePath) and 
+         path.existsSync(changeToCoffeeScriptExtension(filePath))
+  
+changeToCoffeeScriptExtension = (filePath) ->  changeExtension(filePath, '.coffee')
 changeToJavascriptExtension = (filePath) ->  changeExtension(filePath, '.js')
 
 changeExtension = (filePath, newExtension) ->  
@@ -113,4 +146,5 @@ changeExtension = (filePath, newExtension) ->
   oldExtension = path.extname(filePath)
   nameWithoutExtension = path.basename(filePath, oldExtension )
 
-  path.join( dirname, nameWithoutExtension  + newExtension )
+  return path.join( dirname, nameWithoutExtension  + newExtension )
+
