@@ -11,7 +11,8 @@ Other tools that might come in handy
 
 [Growl][g] ([Windows][gw]) with [Risor][gr] installed is very helpful. I like Risor because i find it more apparent and yet unobtrusive than getting a similiar bar from the top :). Dont forget to install [growlnotify][gn] on windows (i also put it into dev-tools though.)
 
-[g]: www.growl.info
+[g]: http://www.growl.info
+[gw]: http://www.growlforwindows.com
 [gr]: http://www.growlforwindows.com/gfw/displays/risor
 [gn]: http://www.growlforwindows.com/gfw/help/growlnotify.aspx
 

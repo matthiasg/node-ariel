@@ -26,5 +26,6 @@
       "mocha": ">= 0.12.1",
       "should": ">= 0.5.1"
   },
-  "optionalDependencies": {}
+  "optionalDependencies": {},
+  "bundleDependencies":["mocha"]
 }
