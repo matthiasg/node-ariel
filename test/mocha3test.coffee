@@ -12,7 +12,7 @@ describe 'mytest3', ->
     2.should.equal(2)
 
   it 'should not work', ->
-    3.should.equal(3)
+    3.should.equal(4)
 
   it 'should test ariel', ->
     ariel.test().should.be.true
@@ -20,8 +20,6 @@ describe 'mytest3', ->
   it 'should compile javascript', ->
     testDir = testFs.createTestDir()
     testFs.createDummyCoffeeFile testDir    
-
-    ariel.watchDir testDir
 
 
 module.exports = coverage

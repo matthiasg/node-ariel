@@ -7,6 +7,8 @@ var ariel = require('./lib/ariel');
 
 module.exports.run = function() {
   
+  console.log("RUNNING:");
+
   ariel.watchDir( argv.dir );
 
   process.stdin.resume();
