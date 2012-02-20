@@ -1,6 +1,8 @@
+testFs = require './testFs'
+
 runforcover = require 'runforcover'
 
-module.exports = coverage = runforcover.cover();
+coverage = runforcover.cover '.*/lib/.*'
 ariel = require '../lib/ariel'
 coverage.release()
 
@@ -14,3 +16,12 @@ describe 'mytest3', ->
 
   it 'should test ariel', ->
     ariel.test().should.be.true
+
+  it 'should compile javascript', ->
+    testDir = testFs.createTestDir()
+    testFs.createDummyCoffeeFile testDir    
+
+    ariel.watchDir testDir
+
+
+module.exports = coverage
