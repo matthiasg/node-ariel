@@ -222,6 +222,7 @@ compileToJavascript = (filePath) ->
     console.log "compiling #{filePath} -> #{javascriptFilePath}"
 
   compileCoffeeScriptFileToJavascriptFile filePath, javascriptFilePath
+  cleanupFile javascriptFilePath
 
 compileCoffeeScriptFileToJavascriptFile = (coffeePath, jsPath) ->
   
