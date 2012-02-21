@@ -332,7 +332,7 @@ compileCoffeeScriptFileToJavascriptFile = (coffeePath, jsPath) ->
     fs.writeFileSync jsPath, compiledJs
   catch error
     console.log "Error compiling #{coffeePath}:".red + error
-    fs.unlinkSync jsPath if path.existsSync jsPath
+    fs.unlinkSync jsPath if path.existSync jsPath
     
 
   return
