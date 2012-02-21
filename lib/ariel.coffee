@@ -346,7 +346,7 @@ isNewer = (a, b) ->
 
 getCoffeeScriptOptions = (filePath) ->
   filename: filePath,
-  bare: no
+  bare: yes
 
 isCoffeeScriptFile = (filePath) -> path.extname(filePath) == '.coffee'
 isJavascriptFile = (filePath) -> path.extname(filePath) == '.js'
