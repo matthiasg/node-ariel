@@ -6,10 +6,15 @@ util = require 'util'
 require 'colors'
 CoffeeScript = require 'coffee-script'
 tty = require 'tty'
+coveraje = require("coveraje").coveraje
 
 module.exports.options = options =
   excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*']
-  excludeCompileDirs: ['.git.*', 'bin.*','test.*','node_modules.*', 'temp.*', 'tools.*'] 
+  excludeCompileDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*'] #,'test.*'] 
+  compile: true
+  dirPath: process.cwd()
+  testRunner: 'mocha'
+  coverageRunner: 'coveraje'
 
 rootDirPath = ""
 filesToCleanup = []
@@ -17,15 +22,20 @@ watchedFiles = []
 compilationRequests = []
 testRequests = []
 isRunningTests = no
+coverageServer = null
+isCoverageServerStarted = no
 
 module.exports.test = () -> true
+module.exports.testAnother = () ->
+  module.exports.watchDir 'FALSE FOLDER'
+  
 module.exports.watchDir = (dirPath) ->
 
   if not path.existsSync dirPath
     console.log "Cannot watch '#{dirPath}'. Directory does not exist."
-    return
+    return false
 
-  rootDirPath = dirPath   
+  rootDirPath = options.dirPath = dirPath   
 
   console.log "watching dir: #{rootDirPath}"
   
@@ -38,9 +48,11 @@ module.exports.watchDir = (dirPath) ->
   cleanAllCompiledFilesOnProcessExit()
 
   queueTest()
+
+  return true
   
 waitForCompilationRequests = ->
-  setInterval handleCompileRequests, 50
+  setInterval handleCompileRequests, 10
 
 handleCompileRequests = ->
   
@@ -56,7 +68,7 @@ handleCompileRequests = ->
     compileFile f
 
 waitForTestRequests = ->
-  setInterval handleTestRequests, 500
+  setInterval handleTestRequests, 250
 
 handleTestRequests = ->
 
@@ -64,11 +76,17 @@ handleTestRequests = ->
 
   if testRequests.length > 0  
        
+    if isCoverageServerStarted 
+        console.log "Stopping coverage server".yellow
+        console.log util.inspect coveraje.webserver
+        coveraje.webserver.stop()
+        isCoverageServerStarted = no
+
     testRequests = []
     
     try
       isRunningTests = yes
-      runMocha -> isRunningTests = false
+      runTests -> isRunningTests = false
           
     catch error
       console.log "ERROR running test: #{error}".red
@@ -139,13 +157,19 @@ queueTest = ->
     testRequests.push 'test'
 
 queueFileCompile = (filePath) ->
+  
+  return if not options.compile
+
   if compilationRequests.indexOf(filePath) < 0
     compilationRequests.push filePath
 
 watchDir = (dirPath, excludeDirs) ->
   fs.watch dirPath, (event,filename) ->
-
+    
     return if isRunningTests
+    return if isMatchedByAny filename, excludeDirs
+    console.log "CHANGE #{event} -> #{filename}".yellow
+
     processAllFilesInFolder rootDirPath, excludeDirs    
     queueTest()
   
@@ -158,7 +182,7 @@ watchFile = (filePath) ->
 
   #console.log "WATCH #{filePath}"
   fs.watch filePath, (event,filename) ->
-    #console.log "CHANGE:#{event}:#{filePath}"
+    console.log "CHANGE:#{event}:#{filePath}"
 
     return if isRunningTests    
 
@@ -175,12 +199,78 @@ isIgnoredCompileFile = (filePath)->
   console.log options.excludeCompileDirs
   isMatchedByAny relativePath, options.excludeCompileDirs
 
+runTests = (cbFinished) ->
+
+  if not path.existsSync 'test'
+    console.log "cannot run tests. no 'test' folder.".yellow
+    return
+
+  console.log 'running tests...'.green  
+  runMocha -> 
+    console.log 'running coverage...'.green
+    runCoveraje(cbFinished)
+    
+
+
+runCoveraje = (cbFinished) ->
+
+  runSingleTest = (file) ->
+    return (context) ->
+        console.log "running helper #{file}"
+        return coveraje.runHelper("mocha", {
+                require: "should",
+                timeout: 200,
+                ui: "bdd",
+                globals: [],
+                _mocha: context.mocha
+        }).run(file)
+      
+  testFiles = gatherTestFiles( options.dirPath, 'test' )
+
+  runner = {}
+  for name,path of testFiles
+    console.log "NAME #{name} #{path}"
+    runner[name] = runSingleTest("./#{path}")
+
+  opts = 
+          useServer: true,
+          globals: "node",
+          resolveRequires: ["*"]
+   
+  code = "var root = require('../index.js');"
+  coveraje.cover code, runner, opts   
+  isCoverageServerStarted = yes
+  
+  cbFinished() if cbFinished
+
+gatherTestFiles = (rootDirPath, testDir) ->
+
+  testFiles = {}
+
+  startDirPath = path.join rootDirPath, testDir
+
+  file.walkSync startDirPath, (dirPath, dirs, files) ->
+
+    # no recursive tests for now since mocha does not gather them automatically for now
+    return if dirPath != startDirPath    
+    console.log "adding #{dirPath}"
+    fullPaths = (path.join(dirPath,p) for p in files)
+    fullPaths.forEach (filePath) ->
+
+      return if not isTestFile filePath
+
+      testDir = path.dirname filePath
+      
+      testFilePath = path.join( path.relative(rootDirPath, testDir), path.basename(filePath))
+      name = path.join( path.relative(startDirPath, testDir), path.basename(filePath))
+
+      testFiles[name] = testFilePath
+  
+  return testFiles
+
 runMocha = (cbFinished)->
    
-  return if not path.existsSync 'test'
 
-  console.log 'Testing...'.green
-  
   try  
 
     opt = 
@@ -204,12 +294,12 @@ runMocha = (cbFinished)->
       console.log()
       console.log "Testing completed.".green
       #tty.setRawMode(false);
-      cbFinished()
+      cbFinished() if cbFinished
     
   catch error
     console.log "ERROR starting tests >".red
     console.log error
-    cbFinished()
+    cbFinished() if cbFinished
 
 compileToJavascript = (filePath) ->
 
@@ -250,6 +340,10 @@ getCoffeeScriptOptions = (filePath) ->
 
 isCoffeeScriptFile = (filePath) -> path.extname(filePath) == '.coffee'
 isJavascriptFile = (filePath) -> path.extname(filePath) == '.js'
+isTestFile = (filePath) -> 
+  
+  result = filePath.match(/test\.js$/gi)
+  result != null
 
 isCompiledJavascriptFileForMatchingCoffeeScript = (filePath) ->
   

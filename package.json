@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git@github.com:matthiasg/node-ariel.git"
   },
-  "main": "lib/ariel.js",
+  "main": "./index.js",
   "scripts": {
     "start": "node ./bin/ariel",
     "test": "node node_modules/mocha/bin/mocha"
@@ -21,8 +21,9 @@
       "coffee-script": "1.2.x",
       "optimist": "0.3.x",
       "colors": "0.6.x",
-      "file": ">= 0.2.0",
-      "mocha": ">= 0.12.1"   
+      "file": ">= 0.2.x",
+      "mocha": ">= 0.12.x",
+      "coveraje": ">= 0.1.x"
     },
   "devDependencies": {
       "mocha": ">= 0.12.1",

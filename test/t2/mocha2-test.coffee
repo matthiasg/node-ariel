@@ -1,6 +1,6 @@
 ariel = require '../../lib/ariel'
 
-console.log 't/test2'
+console.log 'console.log "RUNNING3"'
 
 describe 'mytest2', ->
 

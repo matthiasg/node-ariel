@@ -14,5 +14,8 @@ describe 'mytest3', ->
     ariel.test().should.be.true
 
   it 'should compile javascript', ->
-    testDir = testFs.createTestDir()
-    testFs.createDummyCoffeeFile testDir    
+    #testDir = testFs.createTestDir()
+    #testFs.createDummyCoffeeFile testDir    
+
+  it 'should cover more', ->
+    ariel.testAnother().should.be.false
