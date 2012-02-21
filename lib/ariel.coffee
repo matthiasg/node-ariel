@@ -167,7 +167,7 @@ watchDir = (dirPath, excludeDirs) ->
     
     return if isRunningTests
     return if isMatchedByAny filename, excludeDirs
-    console.log "CHANGE #{event} -> #{filename}".yellow
+    #console.log "CHANGE #{event} -> #{filename}".yellow
 
     processAllFilesInFolder rootDirPath, excludeDirs    
     queueTest()
@@ -181,7 +181,7 @@ watchFile = (filePath) ->
 
   #console.log "WATCH #{filePath}"
   fs.watch filePath, (event,filename) ->
-    console.log "CHANGE:#{event}:#{filePath}"
+    #console.log "CHANGE:#{event}:#{filePath}"
 
     return if isRunningTests    
 
@@ -194,8 +194,6 @@ watchFile = (filePath) ->
   
 isIgnoredCompileFile = (filePath)->
   relativePath = path.relative rootDirPath, filePath
-  console.log relativePath
-  console.log options.excludeCompileDirs
   isMatchedByAny relativePath, options.excludeCompileDirs
 
 runTests = (cbFinished) ->
@@ -228,7 +226,6 @@ runCoveraje = (cbFinished) ->
 
   runner = {}
   for name,testFilePath of testFiles
-    console.log "NAME #{name} #{testFilePath}"
     runner[name] = runSingleTest("./#{testFilePath}")
 
   opts = 
@@ -237,11 +234,9 @@ runCoveraje = (cbFinished) ->
           resolveRequires: ["*"]
   
   rel = path.relative __dirname,process.cwd()
-  console.log "REL:" + rel
-  #indexPath = "#{options.dirPath}/index.js"
+  
   rel = rel.replace(/\\/g,'/')
   indexPath = "#{rel}/index.js"
-
   code = "var root = require('#{indexPath}');"
   coveraje.cover code, runner, opts   
   isCoverageServerStarted = yes
@@ -258,7 +253,7 @@ gatherTestFiles = (rootDirPath, testDir) ->
 
     # no recursive tests for now since mocha does not gather them automatically for now
     return if dirPath != startDirPath    
-    console.log "adding #{dirPath}"
+    # console.log "adding #{dirPath}"
     fullPaths = (path.join(dirPath,p) for p in files)
     fullPaths.forEach (filePath) ->
 
