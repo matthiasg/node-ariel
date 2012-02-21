@@ -104,7 +104,7 @@ cleanAllCompiledFilesOnProcessExit = ->
     console.log "Cleaning #{filesToCleanup.length} compiled files."
     
     for filePath in filesToCleanup
-      fs.unlinkSync filePath if fs.existsSync filePath
+      fs.unlinkSync filePath if path.existsSync filePath
 
 processAllFilesInFolder = (dirPath) ->
   handleAllFiles dirPath, options.excludeDirs
