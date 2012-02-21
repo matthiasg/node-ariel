@@ -1,8 +1,8 @@
 {
   "author": "Matthias Goetzke <m.goetzke@curasystems.de> (https://twitter.com/mgoetzke)",
   "name": "ariel",
-  "description": "continuously test and cover files",
-  "version": "0.0.0",
+  "description": "continuously test and cover files using mocha and coveraje. Note: ariel requires an index.js in root as entry point for now.",
+  "version": "0.0.1",
   "homepage": "https://github.com/matthiasg",
   "repository": {
     "type": "git",
@@ -23,14 +23,14 @@
       "colors": "0.6.x",
       "file": ">= 0.2.x",
       "mocha": ">= 0.12.x",
-      "coveraje": ">= 0.1.x"
+      "coveraje": "0.1.3",
+      "uglify-js": ">= 1.2"
     },
   "devDependencies": {
-      "mocha": ">= 0.12.1",
       "should": ">= 0.5.1",
       "wrench": ">= 1.3.6",
       "runforcover": ">= 0.0.1"      
   },
   "optionalDependencies": {},
-  "bundleDependencies":[]
+  "bundleDependencies":["coveraje"]
 }
