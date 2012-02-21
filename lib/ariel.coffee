@@ -102,7 +102,9 @@ processRootFolder = ->
 cleanAllCompiledFilesOnProcessExit = ->
   process.on 'exit', ->
     console.log "Cleaning #{filesToCleanup.length} compiled files."
-    fs.unlinkSync filePath for filePath in filesToCleanup
+    
+    for filePath in filesToCleanup
+      fs.unlinkSync filePath if fs.existsSync filePath
 
 processAllFilesInFolder = (dirPath) ->
   handleAllFiles dirPath, options.excludeDirs
