@@ -14,7 +14,8 @@ module.exports.options = options =
   compile: true
   dirPath: process.cwd()
   testRunner: 'mocha'
-  coverageRunner: 'coveraje'
+  coverageRunner: 'coveraje',
+  useCoverageServer: true
 
 rootDirPath = ""
 filesToCleanup = []
@@ -24,6 +25,8 @@ testRequests = []
 isRunningTests = no
 coverageServer = null
 isCoverageServerStarted = no
+
+backslashRegExp = new RegExp("\\\\",'g')
 
 module.exports.test = () -> true
 module.exports.testAnother = () ->
@@ -203,13 +206,11 @@ runTests = (cbFinished) ->
     return
 
   console.log 'running tests...'.green  
-  runMocha -> 
+  runMocha => 
     console.log 'running coverage...'.green
-    runCoveraje(cbFinished)
+    runCoveraje options.useCoverageServer, cbFinished
     
-
-
-runCoveraje = (cbFinished) ->
+runCoveraje = (withServer, cbFinished) ->
 
   runSingleTest = (file) ->
     return (context) ->
@@ -229,17 +230,18 @@ runCoveraje = (cbFinished) ->
     runner[name] = runSingleTest("./#{testFilePath}")
 
   opts = 
-          useServer: true,
+          useServer: withServer,
           globals: "node",
           resolveRequires: ["*"]
   
   rel = path.relative __dirname,process.cwd()
   
-  rel = rel.replace(/\\/g,'/')
+  rel = rel.replace(backslashRegExp,'/')
   indexPath = "#{rel}/index.js"
   code = "var root = require('#{indexPath}');"
-  coveraje.cover code, runner, opts   
-  isCoverageServerStarted = yes
+
+  coveraje.cover code, runner, opts
+  isCoverageServerStarted = withServer
   
   cbFinished() if cbFinished
 
@@ -264,6 +266,8 @@ gatherTestFiles = (rootDirPath, testDir) ->
       testFilePath = path.join( path.relative(rootDirPath, testDir), path.basename(filePath))
       name = path.join( path.relative(startDirPath, testDir), path.basename(filePath))
 
+
+      testFilePath = testFilePath.replace(backslashRegExp,'/')
       testFiles[name] = testFilePath
   
   return testFiles
