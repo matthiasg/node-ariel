@@ -76,9 +76,8 @@ handleTestRequests = ->
 
   if testRequests.length > 0  
        
-    if isCoverageServerStarted 
+    if isCoverageServerStarted and coveraje.webserver
         console.log "Stopping coverage server".yellow
-        console.log util.inspect coveraje.webserver
         coveraje.webserver.stop()
         isCoverageServerStarted = no
 
@@ -228,16 +227,22 @@ runCoveraje = (cbFinished) ->
   testFiles = gatherTestFiles( options.dirPath, 'test' )
 
   runner = {}
-  for name,path of testFiles
-    console.log "NAME #{name} #{path}"
-    runner[name] = runSingleTest("./#{path}")
+  for name,testFilePath of testFiles
+    console.log "NAME #{name} #{testFilePath}"
+    runner[name] = runSingleTest("./#{testFilePath}")
 
   opts = 
           useServer: true,
           globals: "node",
           resolveRequires: ["*"]
-   
-  code = "var root = require('../index.js');"
+  
+  rel = path.relative __dirname,process.cwd()
+  console.log "REL:" + rel
+  #indexPath = "#{options.dirPath}/index.js"
+  rel = rel.replace(/\\/g,'/')
+  indexPath = "#{rel}/index.js"
+
+  code = "var root = require('#{indexPath}');"
   coveraje.cover code, runner, opts   
   isCoverageServerStarted = yes
   
@@ -278,12 +283,16 @@ runMocha = (cbFinished)->
       setsid:true
       #customFds: [1,2,3]    
       
+    testFiles = gatherTestFiles( options.dirPath, 'test' )
+    testFilesPaths = for name of testFiles
+      testFiles[name]
 
     #process.stdin.pause()
     #tty.setRawMode(true);
     mochaPath = path.join( __dirname, '../node_modules/mocha/bin/_mocha' );
+    args = [mochaPath].concat(testFilesPaths)
 
-    proc = child.spawn process.argv[0], [mochaPath], opt
+    proc = child.spawn process.argv[0], args, opt
     proc.stdout.pipe process.stdout
     proc.stderr.pipe process.stdout
 
