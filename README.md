@@ -22,7 +22,11 @@ if you want to write and test coffee-script then do
 create an index.js importing all relevant modules from your lib folder. These will be inspected for coverage.
 write your mocha tests in the 'test' directory. You can write them in coffee script or javascript. 
 
-start ariel from "node_modules\.bin"
+start ariel from "node_modules/.bin"
+
+or if you have ./node_modules/.bin" in your path then just type:
+
+	ariel
 
 Running
 -------
