@@ -2,6 +2,52 @@ Ariel
 =====
 As in 'The Tempest' [Ariel][w] is a the magicians eyes and ears, dutifully watching code and listening to coverage going up and down. 
 
+Getting Started
+---------------
+npm install ariel
+
+create a mocha.opts file in your local 'test' directory.
+Should look something like
+
+    --require should 
+    --reporter tap
+    --ui bdd
+    --growl
+
+if you want to write and test coffee-script then do
+npm install coffee-script 
+
+create an index.js importing all relevant modules from your lib folder. These will be inspected for coverage.
+write your mocha tests in the 'test' directory. You can write them in coffee script or javascript. 
+
+start ariel from "node_modules\.bin"
+
+Running
+-------
+
+When ariel starts it first compiles all coffee files into js files in order to allow
+for coverage and easier debugging (line number matches and coffee compiler issues).
+These automtically compiled files are deleted when ariel is exited (CTRL-C).
+
+Whenever a test is detected or a change to any source file is detected a re-run of all tests is initiated and coverage
+is recalculated.
+
+You can look at coverage in the webbrowser. The url is written to the console. only files included from index.js in the root are covered, so make sure you
+require them from there.
+
+Command Line Arguments
+----------------------
+--cc or --coverageConsole will output coverage to the console as a single metric instead of starting the server
+
+
+Based On
+--------
+The awesome coveraje (had to bundle it though since i had to make a minor change which i will try to push into the original)
+mocha
+optimist
+...
+
+
 [w]: http://en.wikipedia.org/wiki/Ariel_(The_Tempest)
 
 [![Build Status](https://secure.travis-ci.org/matthiasg/node-ariel.png?branch=master)](http://travis-ci.org/matthiasg/node-ariel)
