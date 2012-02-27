@@ -4,9 +4,10 @@ As in 'The Tempest' [Ariel][w] is a the magicians eyes and ears, dutifully watch
 
 Getting Started
 ---------------
-npm install ariel
 
-create a mocha.opts file in your local 'test' directory.
+    npm install ariel
+
+create a *mocha.opts* file in your local 'test' directory.
 Should look something like
 
     --require should 
@@ -15,7 +16,8 @@ Should look something like
     --growl
 
 if you want to write and test coffee-script then do
-npm install coffee-script 
+
+    npm install coffee-script 
 
 create an index.js importing all relevant modules from your lib folder. These will be inspected for coverage.
 write your mocha tests in the 'test' directory. You can write them in coffee script or javascript. 
