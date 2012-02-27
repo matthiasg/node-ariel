@@ -31,12 +31,11 @@ or if you have ./node_modules/.bin" in your path then just type:
 Running
 -------
 
-When ariel starts it first compiles all coffee files into js files in order to allow
+When ariel starts it compiles all coffee files into js files in order to allow
 for coverage and easier debugging (line number matches and coffee compiler issues).
-These automtically compiled files are deleted when ariel is exited (CTRL-C).
+These automatically compiled files are deleted when ariel is exited (CTRL-C). It will recompile whenever a change is detected to a coffee file.
 
-Whenever a test is detected or a change to any source file is detected a re-run of all tests is initiated and coverage
-is recalculated.
+Whenever a test is detected or a change to any source file is detected a re-run of all tests is initiated and coverage is recalculated.
 
 You can look at coverage in the webbrowser. The url is written to the console. only files included from index.js in the root are covered, so make sure you
 require them from there.
