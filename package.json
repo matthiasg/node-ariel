@@ -2,7 +2,7 @@
   "author": "Matthias Goetzke <m.goetzke@curasystems.de> (https://twitter.com/mgoetzke)",
   "name": "ariel",
   "description": "continuously test and cover files using mocha and coveraje. Note: ariel requires an index.js in root as entry point for now.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/matthiasg",
   "repository": {
     "type": "git",
