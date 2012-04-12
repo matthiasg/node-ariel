@@ -212,8 +212,6 @@ runTests = (cbFinished) ->
     
 runCoveraje = (withServer, cbFinished) ->
 
-  console.log 'running coverage...'.green
-  
   runSingleTest = (file) ->
     return (context) ->
         console.log "running helper #{file}"
@@ -240,12 +238,24 @@ runCoveraje = (withServer, cbFinished) ->
   
   rel = rel.replace(backslashRegExp,'/')
   indexPath = "#{rel}/index.js"
+
+  if not path.existsSync(indexPath)
+    console.log 'skipping coverage (no index.js)'.green  
+    cbFinished() if cbFinished  
+    return
+  
   code = "var root = require('#{indexPath}');"
 
-  coveraje.cover code, runner, opts
-  isCoverageServerStarted = withServer
+  finished = (instance) ->
+    console.log( instance.report("default") )
+    cbFinished() if cbFinished  
+
+  console.log 'running coverage...'.green 
+  coveraje.cover code, runner, opts, finished
+  isCoverageServerStarted = withServer  
+
+  console.log 'started coverage testing ... '.green
   
-  cbFinished() if cbFinished
 
 gatherTestFiles = (rootDirPath, testDir) ->
 
@@ -298,8 +308,8 @@ runMocha = (cbFinished)->
     
     proc.on 'exit', ->
       #tty.setRawMode(false);
-      process.stdout.resume()
-      process.stderr.resume()
+      #process.stdout.resume()
+      #process.stderr.resume()
 
       console.log()
       console.log "Testing completed.".green
