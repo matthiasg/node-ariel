@@ -1,0 +1,8 @@
+show dbs
+use import
+show collections
+db.events.ANY-SCP.findOne
+db.events["ANY-SCP"].findOne
+db.events["ANY-SCP"].findOne()
+db.events.findOne()
+db.events["ANY-SCP"].findOne()

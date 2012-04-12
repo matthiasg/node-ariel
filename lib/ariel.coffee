@@ -9,7 +9,7 @@ tty = require 'tty'
 coveraje = require("coveraje").coveraje
 
 module.exports.options = options =
-  excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*']
+  excludeDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*', '.*template']
   excludeCompileDirs: ['.git.*', 'bin.*','node_modules.*', 'temp.*', 'tools.*'] #,'test.*'] 
   compile: true
   dirPath: process.cwd()
@@ -207,13 +207,13 @@ runTests = (cbFinished) ->
     console.log "cannot run tests. no 'test' folder.".yellow
     return
 
-  console.log 'running tests...'.green  
   runMocha => 
-    console.log 'running coverage...'.green
     runCoveraje options.useCoverageServer, cbFinished
     
 runCoveraje = (withServer, cbFinished) ->
 
+  console.log 'running coverage...'.green
+  
   runSingleTest = (file) ->
     return (context) ->
         console.log "running helper #{file}"
@@ -256,7 +256,7 @@ gatherTestFiles = (rootDirPath, testDir) ->
   file.walkSync startDirPath, (dirPath, dirs, files) ->
 
     # no recursive tests for now since mocha does not gather them automatically for now
-    return if dirPath != startDirPath    
+    # return if dirPath != startDirPath    
     # console.log "adding #{dirPath}"
     fullPaths = (path.join(dirPath,p) for p in files)
     fullPaths.forEach (filePath) ->
@@ -281,29 +281,28 @@ runMocha = (cbFinished)->
 
     opt = 
       cwd: process.cwd()
+      env: process.env
       setsid:true
-      #customFds: [1,2,3]    
+      customFds: [0,1,2]    
       
-    testFiles = gatherTestFiles( options.dirPath, 'test' )
-    testFilesPaths = for name of testFiles
-      testFiles[name]
+    #testFiles = gatherTestFiles( options.dirPath, 'test' )
+    #testFilesPaths = for name of testFiles
+    #  testFiles[name]
 
-    #process.stdin.pause()
-    #tty.setRawMode(true);
+    console.log 'running tests...'.green  
+    
     mochaPath = path.join( __dirname, '../node_modules/mocha/bin/_mocha' );
-    args = [mochaPath].concat(testFilesPaths)
+    args = [mochaPath]
 
     proc = child.spawn process.argv[0], args, opt
-    proc.stdout.pipe process.stdout
-    proc.stderr.pipe process.stdout
-
-    #proc.stdout.on 'data', (data)->process.stdout.write(data)
-    #proc.stderr.on 'data', (data)->process.stderr.write(data)
-
+    
     proc.on 'exit', ->
+      #tty.setRawMode(false);
+      process.stdout.resume()
+      process.stderr.resume()
+
       console.log()
       console.log "Testing completed.".green
-      #tty.setRawMode(false);
       cbFinished() if cbFinished
     
   catch error
@@ -319,7 +318,7 @@ compileToJavascript = (filePath) ->
     return if isNewer javascriptFilePath, filePath
     console.log "re-compiling #{filePath} -> #{javascriptFilePath}"
   else
-    console.log "compiling #{filePath} -> #{javascriptFilePath}"
+    #console.log "compiling #{filePath} -> #{javascriptFilePath}"
 
   compileCoffeeScriptFileToJavascriptFile filePath, javascriptFilePath
   cleanupFile javascriptFilePath
